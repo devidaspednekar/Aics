@@ -1,0 +1,33 @@
+pip install mlxtend
+
+from mlxtend.frequent_patterns import apriori
+from mlxtend.frequent_patterns import association_rules
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+dataset=[['Milk','Onion','Nutmeg','Kidney Beans','Eggs','Yogurt'],
+ ['Dill','Onion','Nutmeg','Kidney Beans','Eggs','Yogurt'],
+ ['Milk','Apple','Kidney Beans','Eggs'], 
+ ['Milk','Unicorn','Corn','Kidney Beans','Yogurt'],
+ ['Corn','Onion','Onion','Kidney Beans','Ice cream','Eggs']]
+
+
+df=pd.DataFrame(dataset)
+
+
+encoded_df=pd.get_dummies(df.apply(lambda x:pd.Series(x)),
+ prefix='',prefix_sep='')
+
+frequent_itemsets=apriori(encoded_df,min_support=0.5,
+ use_colnames=True)
+
+
+rules=association_rules(frequent_itemsets,metric="confidence",
+ min_threshold=0.7)
+
+print("Frequent Itemsets",frequent_itemsets)
+
+
+print("\nAssociation Rules:")
+print(rules)
