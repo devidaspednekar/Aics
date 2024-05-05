@@ -1,0 +1,24 @@
+@relation employee
+@attribute empid numeric
+@attribute name {akanksha,vaishnavi,lavesh,sonali,yash}
+@attribute salary numeric
+@attribute age numeric
+@attribute gender {male,female}
+@attribute contactno numeric
+@attribute increment {high,low}
+@data
+101,akanksha,40000,20,female,9876543,low
+102,vaishnavi,3000,19,female,673489,high
+103,lavesh,10000,21,male,786534,high
+104,sonali,2000,8,female,876567,low
+105,yash,8000,20,male,678432,low
+106,vaishnavi,9000,19,female,673489,high
+101,akanksha,10000,20,female,9876543,low
+105,yash,8090,20,male,678432,low
+103,lavesh,32000,21,male,786534,high
+105,yash,8000,20,male,678432,low
+102,sonali,9000,20,female,89,high
+101,akanksha,10000,20,female,9876543,high
+102,vaishnavi ,1000,8,female,673489,high
+103,lavesh ,10000,21,male,786534,high
+104, akanksha,8000,21,male,876567,high
