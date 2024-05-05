@@ -1,0 +1,122 @@
+ import pandas as pd
+import seaborn as sns
+import numpy as np
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import KFold, cross_val_score
+from sklearn.model_selection import train_test_split
+from imblearn.under_sampling import RandomUnderSampler  
+from sklearn.metrics import RocCurveDisplay, confusion_matrix, roc_auc_score, classification_report, average_precision_score
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import AdaBoostClassifier
+
+
+date_columns = ["Timestamp"]
+df = pd.read_csv("ddos_dataset (1).csv", parse_dates=date_columns,index_col=None)
+df.head()
+
+
+df.info()
+
+
+df[['Source', 'Destination', 'Source Port', 'Dest Port', 'Other']] = df['Flow ID'].str.split('-', expand=True)
+df.head()
+
+
+df = df.sort_values("Timestamp")
+
+
+# Dropping Timestamp and ports (not sure about the data for ports hence deleting for safety)
+df = df.drop(columns=["Timestamp", "Source Port", "Dest Port", "Other"])
+df.head()
+
+
+df[['SourceIP_1', 'SourceIP_2', 'SourceIP_3', 'SourceIP_4']] = df.Source.str.split('.', expand=True)
+df[['DestinationIP_1', 'DestinationIP_2', 'DestinationIP_3', 'DestinationIP_4']] = df.Destination.str.split('.', expand=True)
+df = df.drop(columns=["Source", "Destination", "Flow ID"])
+df.head()
+
+
+
+df.isna().sum()
+
+
+
+le = LabelEncoder()
+df['Label'] = le.fit_transform(df['Label'])
+df.head()
+
+
+sns.countplot(df['Label']);
+
+
+
+X = df.drop('Label' , axis = 1)
+y = df['Label']
+RUS = RandomUnderSampler(random_state=42)
+X_rus, y_rus = RUS.fit_resample(X,y)
+
+
+X_train, X_test, y_train, y_test = train_test_split(X_rus, y_rus, test_size=0.3, random_state=42)
+
+
+
+models = {"Logistic Regression": LogisticRegression(), "Random Forest": RandomForestClassifier(),
+         "KNN": KNeighborsClassifier(), "AdaBoost": AdaBoostClassifier()}
+
+cv = KFold(n_splits=10)
+import time
+
+def fit_and_score(models, X_train, X_test, y_train, y_test):
+    model_scores = {}
+    model_roc_auc_scores = {}
+    model_time = {}
+    for name, model in models.items():
+        start = time.process_time()
+        model.fit(X_train, y_train)
+        model_time[name] = time.process_time() - start
+        scores = cross_val_score(model, X_train, y_train, scoring='roc_auc', cv=cv, n_jobs=-1)
+        model_roc_auc_scores[name] = roc_auc_score(y_test, model.predict_proba(X_test)[:,1])
+        model_scores[name] = model.score(X_test, y_test)
+    return model_scores, model_roc_auc_scores, model_time
+
+
+
+model_scores, model_roc_auc_scores, model_time = fit_and_score(models, X_train, X_test, y_train, y_test)
+print("ACCURACIES : ")
+model_scores
+
+
+
+print("ROC AUC SCORES : ")
+model_roc_auc_scores
+
+
+
+print("Time : ")
+model_time
+
+
+
+model_compare = pd.DataFrame(model_scores, index=['ROC AUC Score'])
+model_compare.T.plot.bar();
+
+
+
+clf = RandomForestClassifier()
+clf.fit(X_train, y_train)
+clf.score(X_test, y_test)
+
+
+
+
+y_preds = clf.predict(X_test)
+conf_mat = confusion_matrix(y_test, y_preds)
+sns.heatmap(conf_mat, annot=True);
+
+
+print(classification_report(y_test, y_preds))
+
+
